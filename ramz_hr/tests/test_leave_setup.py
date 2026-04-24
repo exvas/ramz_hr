@@ -64,3 +64,47 @@ class TestLeaveSetup(unittest.TestCase):
         policy = frappe.get_doc("Leave Policy", "Ramz Saudi Standard")
         types = {d.leave_type for d in policy.leave_policy_details}
         self.assertNotIn("Unpaid Leave", types)
+
+
+class TestAutoAssignLeavePolicy(unittest.TestCase):
+    def setUp(self):
+        frappe.db.set_single_value("Ramz HR Settings", "auto_assign_leave_policy", 1)
+
+    def tearDown(self):
+        frappe.db.rollback()
+
+    def _make_employee(self, **overrides):
+        company = frappe.get_all("Company", limit=1, pluck="name")[0]
+        payload = {
+            "doctype": "Employee",
+            "employee_name": "Test Saudi Employee",
+            "first_name": "Test",
+            "last_name": "SaudiEmp",
+            "gender": "Male",
+            "date_of_birth": "1990-01-01",
+            "date_of_joining": datetime.date.today().replace(month=1, day=1),
+            "company": company,
+            "custom_nationality": "Saudi Arabia",
+            "status": "Active",
+        }
+        payload.update(overrides)
+        return frappe.get_doc(payload).insert(ignore_permissions=True)
+
+    def test_new_employee_gets_leave_policy_assignment(self):
+        emp = self._make_employee()
+        assignments = frappe.get_all(
+            "Leave Policy Assignment",
+            filters={"employee": emp.name, "docstatus": 1},
+            fields=["leave_policy"],
+        )
+        self.assertTrue(assignments, "New employee should have a Leave Policy Assignment")
+        self.assertEqual(assignments[0].leave_policy, "Ramz Saudi Standard")
+
+    def test_toggle_off_skips_assignment(self):
+        frappe.db.set_single_value("Ramz HR Settings", "auto_assign_leave_policy", 0)
+        emp = self._make_employee()
+        assignments = frappe.get_all(
+            "Leave Policy Assignment",
+            filters={"employee": emp.name},
+        )
+        self.assertEqual(assignments, [])
