@@ -30,3 +30,20 @@ class TestInstall(unittest.TestCase):
         }
         missing = required - fieldnames
         self.assertEqual(missing, set(), f"Missing fields on Ramz HR Settings: {missing}")
+
+    def test_medical_insurance_class_doctype_exists(self):
+        self.assertTrue(
+            frappe.db.exists("DocType", "Medical Insurance Class"),
+            "Medical Insurance Class DocType must exist after install",
+        )
+        self.assertFalse(
+            frappe.get_meta("Medical Insurance Class").issingle,
+            "Medical Insurance Class must not be a single doctype",
+        )
+
+    def test_medical_insurance_class_autoname(self):
+        meta = frappe.get_meta("Medical Insurance Class")
+        self.assertEqual(
+            meta.autoname, "field:class_name",
+            "Medical Insurance Class must autoname from class_name",
+        )
