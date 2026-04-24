@@ -102,3 +102,23 @@ class TestInstall(unittest.TestCase):
                 f"Holiday list must include {must_have}",
             )
         self.assertEqual(hl.weekly_off, "Friday", "Weekly off should be Friday (week-end 1)")
+
+    def test_saudi_salary_components_seeded(self):
+        for name in ["Basic", "Housing Allowance", "Transportation Allowance"]:
+            self.assertTrue(
+                frappe.db.exists("Salary Component", name),
+                f"Salary Component '{name}' must exist",
+            )
+        for name, expected_type in [("Basic", "Earning"), ("Housing Allowance", "Earning"), ("Transportation Allowance", "Earning")]:
+            actual = frappe.db.get_value("Salary Component", name, "type")
+            self.assertEqual(actual, expected_type)
+
+    def test_ramz_saudi_standard_structure_seeded(self):
+        self.assertTrue(
+            frappe.db.exists("Salary Structure", "Ramz Saudi Standard"),
+            "Salary Structure 'Ramz Saudi Standard' must be seeded",
+        )
+        s = frappe.get_doc("Salary Structure", "Ramz Saudi Standard")
+        self.assertEqual(s.is_active, "Yes")
+        earnings = {row.salary_component for row in s.earnings}
+        self.assertEqual(earnings, {"Basic", "Housing Allowance", "Transportation Allowance"})
