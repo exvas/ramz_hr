@@ -53,3 +53,33 @@ class TestInstall(unittest.TestCase):
         existing = set(frappe.get_all("Medical Insurance Class", pluck="name"))
         missing = expected - existing
         self.assertEqual(missing, set(), f"Seeded Medical Insurance Classes missing: {missing}")
+
+    def test_employee_saudi_custom_fields(self):
+        meta = frappe.get_meta("Employee")
+        fieldnames = {df.fieldname for df in meta.fields}
+        required = {
+            "custom_saudi_employment_details_section",
+            "custom_iqama_number",
+            "custom_iqama_expiry",
+            "custom_contract_type",
+            "custom_work_location",
+            "custom_probation_period_days",
+            "custom_probation_end_date",
+            "custom_benefits_section",
+            "custom_air_ticket_eligibility",
+            "custom_medical_insurance_class",
+            "custom_saudi_payroll_section",
+            "custom_iban",
+        }
+        missing = required - fieldnames
+        self.assertEqual(missing, set(), f"Employee missing Saudi fields: {missing}")
+
+    def test_employee_nationality_required(self):
+        # This ERPNext install uses `custom_nationality` rather than stock `nationality`.
+        meta = frappe.get_meta("Employee")
+        nat = next(
+            (df for df in meta.fields if df.fieldname in ("nationality", "custom_nationality")),
+            None,
+        )
+        self.assertIsNotNone(nat, "Employee must expose a nationality field (stock or custom)")
+        self.assertEqual(nat.reqd, 1, "Employee nationality must be required by property setter")
