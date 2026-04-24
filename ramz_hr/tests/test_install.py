@@ -83,3 +83,22 @@ class TestInstall(unittest.TestCase):
         )
         self.assertIsNotNone(nat, "Employee must expose a nationality field (stock or custom)")
         self.assertEqual(nat.reqd, 1, "Employee nationality must be required by property setter")
+
+    def test_saudi_holiday_list_seeded(self):
+        import datetime
+
+        year = datetime.date.today().year
+        name = f"Saudi Holidays {year}"
+        self.assertTrue(
+            frappe.db.exists("Holiday List", name),
+            f"Holiday List '{name}' must be seeded on install",
+        )
+        hl = frappe.get_doc("Holiday List", name)
+
+        descriptions = {h.description for h in hl.holidays}
+        for must_have in ["Saudi Founding Day", "Saudi National Day"]:
+            self.assertTrue(
+                any(must_have in d for d in descriptions),
+                f"Holiday list must include {must_have}",
+            )
+        self.assertEqual(hl.weekly_off, "Friday", "Weekly off should be Friday (week-end 1)")
