@@ -17,7 +17,7 @@ LEAVE_TYPES: list[dict] = [
         "leave_type_name": "Annual Leave",
         "max_leaves_allowed": 21,
         "is_carry_forward": 1,
-        "max_carry_forwarded_leaves": 21,
+        "maximum_carry_forwarded_leaves": 21,
         "is_lwp": 0,
         "is_ppl": 0,
         "allow_encashment": 1,
@@ -124,9 +124,9 @@ def setup() -> None:
 def _ensure_custom_fields() -> None:
     """Add Saudi-specific custom fields to Leave Type that stock HRMS lacks.
 
-    - applicable_for_gender: restrict leave to Male/Female (Paternity/Maternity).
-    - max_carry_forwarded_leaves: alias of maximum_carry_forwarded_leaves for
-      stable API naming (stock HRMS renamed the field across versions).
+    Only `applicable_for_gender` is a legitimate addition — stock HRMS Leave
+    Type has no way to restrict a leave to one gender, which we need for
+    Paternity (Male-only) and Maternity (Female-only).
     """
     from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
 
@@ -139,25 +139,34 @@ def _ensure_custom_fields() -> None:
                 "options": "\nMale\nFemale\nOther",
                 "insert_after": "leave_type_name",
             },
-            {
-                "fieldname": "max_carry_forwarded_leaves",
-                "label": "Max Carry Forwarded Leaves",
-                "fieldtype": "Int",
-                "insert_after": "maximum_carry_forwarded_leaves",
-                "description": "Alias of maximum_carry_forwarded_leaves for stable API.",
-            },
         ]
     }
     create_custom_fields(custom_fields, update=True)
+    _remove_deprecated_max_carry_forward_alias()
+
+
+def _remove_deprecated_max_carry_forward_alias() -> None:
+    """Drop the `max_carry_forwarded_leaves` custom field (a short-lived alias
+    added during Task 11 to paper over a rename in stock HRMS). The canonical
+    stock field `maximum_carry_forwarded_leaves` is used directly now.
+
+    Safe to run on sites where the alias never existed — skips silently.
+    """
+    cf = frappe.db.get_value(
+        "Custom Field",
+        {"dt": "Leave Type", "fieldname": "max_carry_forwarded_leaves"},
+    )
+    if cf:
+        frappe.delete_doc("Custom Field", cf, ignore_permissions=True, force=True)
 
 
 def _ensure_leave_type(spec: dict) -> None:
     name = spec["leave_type_name"]
     payload = {k: v for k, v in spec.items() if k != "annual_allocation"}
     if frappe.db.exists("Leave Type", name):
-        # Idempotent update: ensure custom fields (applicable_for_gender,
-        # max_carry_forwarded_leaves) populate on previously-created rows
-        # where they may have been silently dropped.
+        # Idempotent update: ensure custom fields (applicable_for_gender)
+        # and stock fields populate on previously-created rows where they
+        # may have been silently dropped on earlier runs.
         doc = frappe.get_doc("Leave Type", name)
         dirty = False
         for key, value in payload.items():

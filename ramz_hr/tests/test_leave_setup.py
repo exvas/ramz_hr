@@ -27,7 +27,7 @@ class TestLeaveSetup(unittest.TestCase):
     def test_annual_leave_is_carry_forward_and_earned(self):
         lt = frappe.get_doc("Leave Type", "Annual Leave")
         self.assertEqual(lt.is_carry_forward, 1)
-        self.assertEqual(lt.max_carry_forwarded_leaves, 21)
+        self.assertEqual(lt.maximum_carry_forwarded_leaves, 21)
         self.assertEqual(lt.is_earned_leave, 1)
         self.assertEqual(lt.earned_leave_frequency, "Monthly")
 
