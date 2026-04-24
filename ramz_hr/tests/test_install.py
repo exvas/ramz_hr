@@ -47,3 +47,9 @@ class TestInstall(unittest.TestCase):
             meta.autoname, "field:class_name",
             "Medical Insurance Class must autoname from class_name",
         )
+
+    def test_medical_insurance_classes_seeded(self):
+        expected = {"VIP", "A+", "A", "B", "C"}
+        existing = set(frappe.get_all("Medical Insurance Class", pluck="name"))
+        missing = expected - existing
+        self.assertEqual(missing, set(), f"Seeded Medical Insurance Classes missing: {missing}")
