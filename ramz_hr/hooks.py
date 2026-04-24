@@ -247,3 +247,24 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+# ---------------------------------------------------------------------------
+# Ramz HR — active wiring
+# ---------------------------------------------------------------------------
+
+after_install = "ramz_hr.install.after_install"
+after_migrate = "ramz_hr.install.after_migrate"
+
+doc_events = {
+    "Employee": {
+        "validate":     "ramz_hr.countries.saudi.validators.validate_employee",
+        "after_insert": "ramz_hr.countries.saudi.leave_types.auto_assign_leave_policy",
+    },
+    "Salary Structure Assignment": {
+        "validate": "ramz_hr.overrides.salary_structure_assignment.validate_basic_percentage",
+    },
+}
+
+fixtures = [
+    {"dt": "Custom Field", "filters": [["module", "=", "Ramz HR"]]},
+    {"dt": "Property Setter", "filters": [["module", "=", "Ramz HR"]]},
+]
