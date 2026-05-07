@@ -202,6 +202,20 @@ def _ensure_leave_policy() -> None:
     policy.insert(ignore_permissions=True)
 
 
+def _get_default_company() -> str | None:
+    """Return the default Company on this site, or the first available, or None.
+
+    Some HRMS versions / Frappe Cloud installs make Leave Period.company and
+    Leave Policy Assignment.company mandatory. Resolve once here so seeders and
+    hooks behave consistently.
+    """
+    company = frappe.defaults.get_global_default("company")
+    if company and frappe.db.exists("Company", company):
+        return company
+    rows = frappe.get_all("Company", limit=1, pluck="name", order_by="creation asc")
+    return rows[0] if rows else None
+
+
 def _ensure_leave_period() -> None:
     settings = frappe.get_single("Ramz HR Settings")
     start_month = int(settings.fiscal_year_start_month or 1)
@@ -209,6 +223,17 @@ def _ensure_leave_period() -> None:
     name = f"Saudi {year}"
     if frappe.db.exists("Leave Period", name):
         return
+
+    company = _get_default_company()
+    if not company:
+        # Fresh site with no Company yet — skip seeding; admin runs `bench migrate`
+        # again after creating a Company and the period gets seeded then.
+        frappe.logger("ramz_hr").warning(
+            f"No Company exists yet; skipping Leave Period '{name}' seed. "
+            "Run `bench migrate` again after creating a Company."
+        )
+        return
+
     from_date = datetime.date(year, start_month, 1)
     # end on last day of month 12 months later (same date next year minus 1 day)
     to_year = year + 1 if start_month > 1 else year
@@ -224,6 +249,7 @@ def _ensure_leave_period() -> None:
     period.from_date = from_date
     period.to_date = to_date
     period.is_active = 1
+    period.company = company
     period.flags.name_set = True
     period.insert(ignore_permissions=True)
 
@@ -251,6 +277,7 @@ def auto_assign_leave_policy(doc, method=None):
 
     assignment = frappe.new_doc("Leave Policy Assignment")
     assignment.employee = doc.name
+    assignment.company = doc.get("company") or _get_default_company()
     assignment.assignment_based_on = "Leave Period"
     assignment.leave_policy = policy_name
     assignment.leave_period = period_name
