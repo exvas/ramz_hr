@@ -27,8 +27,23 @@ def validate_employee(doc, method=None):
     compute_probation_end_date(doc)
 
 
+def _get_iqama_number(doc):
+    """Get Iqama number, supporting both custom_ prefixed and standard field names."""
+    return (doc.get("custom_iqama_number") or doc.get("iqama_number") or "").strip()
+
+
+def _get_iqama_expiry(doc):
+    """Get Iqama expiry date, supporting both custom_ prefixed and standard field names."""
+    return doc.get("custom_iqama_expiry") or doc.get("iqama_expiry_date")
+
+
+def _get_nationality(doc):
+    """Get nationality, supporting both custom_ prefixed and standard field names."""
+    return (doc.get("custom_nationality") or doc.get("nationality") or "").strip()
+
+
 def validate_iqama_format(doc):
-    iqama = (doc.get("custom_iqama_number") or "").strip()
+    iqama = _get_iqama_number(doc)
     if not iqama:
         return
     if not IQAMA_RE.match(iqama):
@@ -36,9 +51,9 @@ def validate_iqama_format(doc):
 
 
 def validate_iqama_expiry_presence(doc):
-    nationality = (doc.get("custom_nationality") or "").strip()
+    nationality = _get_nationality(doc)
     if nationality and nationality != "Saudi Arabia":
-        if not doc.get("custom_iqama_expiry"):
+        if not _get_iqama_expiry(doc):
             frappe.throw("Iqama Expiry is required for non-Saudi employees.")
 
 
