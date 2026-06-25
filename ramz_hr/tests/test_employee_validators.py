@@ -43,8 +43,24 @@ class TestEmployeeValidators(unittest.TestCase):
         with self.assertRaises(frappe.ValidationError):
             validate_iqama_expiry_presence(doc)
 
+    def test_iqama_expiry_required_for_non_saudi_with_staff_pro_fields(self):
+        """Test with Staff Pro field names (no custom_ prefix)."""
+        doc = _Stub(nationality="India", iqama_expiry_date=None)
+        with self.assertRaises(frappe.ValidationError):
+            validate_iqama_expiry_presence(doc)
+
+    def test_iqama_expiry_passes_with_staff_pro_fields(self):
+        """Test with Staff Pro field names when expiry is provided."""
+        doc = _Stub(nationality="India", iqama_expiry_date="2026-12-31")
+        validate_iqama_expiry_presence(doc)  # should not raise
+
     def test_iqama_expiry_optional_for_saudi(self):
         doc = _Stub(custom_nationality="Saudi Arabia", custom_iqama_expiry=None)
+        validate_iqama_expiry_presence(doc)  # not raised
+
+    def test_iqama_expiry_optional_for_saudi_with_staff_pro_fields(self):
+        """Test with Staff Pro field names for Saudi employee."""
+        doc = _Stub(nationality="Saudi Arabia", iqama_expiry_date=None)
         validate_iqama_expiry_presence(doc)  # not raised
 
     def test_iban_valid(self):
