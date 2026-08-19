@@ -17,9 +17,6 @@ DEFAULT_SETTINGS = {
     "auto_assign_leave_policy": 1,
     "fiscal_year_start_month": 1,
     "casual_leave_days": 7,
-    "basic_pct_min": 50,
-    "basic_pct_max": 70,
-    "basic_pct_strict": 1,
     "iqama_reminder_days": 30,
 }
 

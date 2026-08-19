@@ -258,7 +258,7 @@ def _seed_default_policy_in_settings() -> None:
     current = frappe.db.get_single_value("Ramz HR Settings", "default_leave_policy")
     if not current and frappe.db.exists("Leave Policy", POLICY_NAME):
         # Use db.set_single_value to avoid triggering the full Ramz HR Settings
-        # validate hook (which requires basic_pct_min/max to be populated).
+        # validate hook during install.
         frappe.db.set_single_value("Ramz HR Settings", "default_leave_policy", POLICY_NAME)
 
 

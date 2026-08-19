@@ -22,10 +22,6 @@ class TestInstall(unittest.TestCase):
             "default_leave_policy",
             "fiscal_year_start_month",
             "casual_leave_days",
-            "basic_salary_component",
-            "basic_pct_min",
-            "basic_pct_max",
-            "basic_pct_strict",
             "iqama_reminder_days",
         }
         missing = required - fieldnames

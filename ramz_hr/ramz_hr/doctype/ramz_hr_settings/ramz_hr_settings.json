@@ -13,13 +13,7 @@
   "default_leave_policy",
   "casual_leave_days",
   "column_break_leave",
-  "iqama_reminder_days",
-  "salary_section",
-  "basic_salary_component",
-  "basic_pct_min",
-  "column_break_salary",
-  "basic_pct_max",
-  "basic_pct_strict"
+  "iqama_reminder_days"
  ],
  "fields": [
   {"fieldname": "country_section", "fieldtype": "Section Break", "label": "Country"},
@@ -31,13 +25,7 @@
   {"fieldname": "default_leave_policy", "fieldtype": "Link", "label": "Default Leave Policy", "options": "Leave Policy"},
   {"fieldname": "casual_leave_days", "fieldtype": "Int", "label": "Casual Leave Days / Year", "default": "7", "description": "PDF range 3–7. Used at install time when seeding the Leave Policy."},
   {"fieldname": "column_break_leave", "fieldtype": "Column Break"},
-  {"fieldname": "iqama_reminder_days", "fieldtype": "Int", "label": "Iqama Expiry Reminder (Days)", "default": "30", "description": "Reserved — used by Phase 2 Iqama-expiry scheduler."},
-  {"fieldname": "salary_section", "fieldtype": "Section Break", "label": "Salary Validation"},
-  {"fieldname": "basic_salary_component", "fieldtype": "Link", "label": "Basic Salary Component", "options": "Salary Component", "description": "Which Salary Component is considered “Basic” for the 50–70% rule."},
-  {"fieldname": "basic_pct_min", "fieldtype": "Float", "label": "Basic % Minimum", "default": "50"},
-  {"fieldname": "column_break_salary", "fieldtype": "Column Break"},
-  {"fieldname": "basic_pct_max", "fieldtype": "Float", "label": "Basic % Maximum", "default": "70"},
-  {"fieldname": "basic_pct_strict", "fieldtype": "Check", "label": "Strict Basic % Enforcement", "default": "1", "description": "1 = throw on violation; 0 = warning only."}
+  {"fieldname": "iqama_reminder_days", "fieldtype": "Int", "label": "Iqama Expiry Reminder (Days)", "default": "30", "description": "Reserved — used by Phase 2 Iqama-expiry scheduler."}
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,

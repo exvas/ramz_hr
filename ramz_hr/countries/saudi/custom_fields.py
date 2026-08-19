@@ -113,6 +113,47 @@ CUSTOM_FIELDS: dict[str, list[dict]] = {
             "description": "Saudi IBAN: 'SA' + 22 digits.",
         },
     ],
+    # Per-employee salary amounts for the single "Ramz Saudi Standard" structure.
+    # The structure's component formulas read these fields at salary-slip time
+    # (Basic comes from the native `base` field). See countries/saudi/salary_components.py.
+    "Salary Structure Assignment": [
+        {
+            "fieldname": "custom_ramz_components_section",
+            "fieldtype": "Section Break",
+            "label": "Ramz Salary Components",
+            "insert_after": "base",
+        },
+        {
+            "fieldname": "custom_housing",
+            "fieldtype": "Currency",
+            "label": "Housing Allowance",
+            "insert_after": "custom_ramz_components_section",
+            "description": "Monthly Housing amount for this employee.",
+        },
+        {
+            "fieldname": "custom_transportation",
+            "fieldtype": "Currency",
+            "label": "Transportation Allowance",
+            "insert_after": "custom_housing",
+        },
+        {
+            "fieldname": "custom_column_break_ramz",
+            "fieldtype": "Column Break",
+            "insert_after": "custom_transportation",
+        },
+        {
+            "fieldname": "custom_other_allowance",
+            "fieldtype": "Currency",
+            "label": "Other Allowance",
+            "insert_after": "custom_column_break_ramz",
+        },
+        {
+            "fieldname": "custom_other_deduction",
+            "fieldtype": "Currency",
+            "label": "Other Deduction",
+            "insert_after": "custom_other_allowance",
+        },
+    ],
 }
 
 

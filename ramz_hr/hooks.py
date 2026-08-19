@@ -259,9 +259,6 @@ doc_events = {
         "validate":     "ramz_hr.countries.saudi.validators.validate_employee",
         "after_insert": "ramz_hr.countries.saudi.leave_types.auto_assign_leave_policy",
     },
-    "Salary Structure Assignment": {
-        "validate": "ramz_hr.overrides.salary_structure_assignment.validate_basic_percentage",
-    },
 }
 
 fixtures = [
