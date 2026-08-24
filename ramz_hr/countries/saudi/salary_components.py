@@ -89,34 +89,95 @@ def _ensure_components() -> None:
 
 
 def _upsert_structure() -> None:
+    """Create the structure on a fresh site; converge an existing DRAFT one to
+    DESIRED_*. Idempotent and submit-safe.
+
+    Salary Structure is submittable, and it must be submitted before any Salary
+    Structure Assignment can reference it. Once submitted its child rows cannot
+    be cleared/re-appended and saved (that raises "Salary Detail <x> not found"),
+    so after_migrate must NEVER mutate+save a submitted structure. We therefore
+    no-op when the config already matches, and skip (with a warning) if it is
+    submitted but differs — rather than crash the whole migrate.
+    """
     currency = frappe.db.get_default("currency") or "SAR"
 
-    if frappe.db.exists("Salary Structure", STRUCTURE_NAME):
-        ss = frappe.get_doc("Salary Structure", STRUCTURE_NAME)
-    else:
+    if not frappe.db.exists("Salary Structure", STRUCTURE_NAME):
         ss = frappe.new_doc("Salary Structure")
         ss.salary_structure_name = STRUCTURE_NAME
         ss.name = STRUCTURE_NAME
+        ss.is_active = "Yes"
+        ss.payroll_frequency = "Monthly"
+        ss.currency = currency
+        for row in DESIRED_EARNINGS:
+            ss.append("earnings", _struct_row(row))
+        for row in DESIRED_DEDUCTIONS:
+            ss.append("deductions", _struct_row(row))
+        ss.flags.ignore_mandatory = True
+        ss.insert(ignore_permissions=True)
+        _ensure_active()
+        return
 
+    ss = frappe.get_doc("Salary Structure", STRUCTURE_NAME)
+
+    if _structure_matches_desired(ss):
+        _ensure_active()  # cheap raw-write, safe on submitted docs
+        return
+
+    if ss.docstatus == 1:
+        frappe.logger("ramz_hr").warning(
+            f"Salary Structure {STRUCTURE_NAME!r} is submitted and differs from the "
+            "desired ramz_hr config; skipping auto-update. Amend it manually if a "
+            "component change is required."
+        )
+        _ensure_active()
+        return
+
+    # Draft and differs — safe to rebuild + save.
     ss.is_active = "Yes"
     ss.payroll_frequency = "Monthly"
     ss.currency = currency
-
-    # Rebuild the component tables so re-running always converges to DESIRED_*.
     ss.set("earnings", [])
     ss.set("deductions", [])
     for row in DESIRED_EARNINGS:
         ss.append("earnings", _struct_row(row))
     for row in DESIRED_DEDUCTIONS:
         ss.append("deductions", _struct_row(row))
-
     ss.flags.ignore_mandatory = True
     ss.flags.ignore_permissions = True
-    ss.save() if not ss.is_new() else ss.insert(ignore_permissions=True)
+    ss.save()
+    _ensure_active()
 
-    # Some HRMS versions reset is_active on save of a formula-only structure.
+
+def _ensure_active() -> None:
+    """Raw DB write (docstatus-agnostic) so is_active stays 'Yes' without a save."""
     if frappe.db.get_value("Salary Structure", STRUCTURE_NAME, "is_active") != "Yes":
         frappe.db.set_value("Salary Structure", STRUCTURE_NAME, "is_active", "Yes")
+
+
+def _structure_matches_desired(ss) -> bool:
+    """True when the structure's earnings + deductions already match DESIRED_*
+    (component, formula, condition, payment-days, formula-flag). Comparison is
+    order-independent and keyed by salary_component."""
+
+    def rows_match(actual_rows, desired_rows) -> bool:
+        if len(actual_rows) != len(desired_rows):
+            return False
+        by_comp = {r.salary_component: r for r in actual_rows}
+        for d in desired_rows:
+            r = by_comp.get(d["salary_component"])
+            if r is None:
+                return False
+            if (r.formula or "").strip() != d["formula"].strip():
+                return False
+            if int(r.amount_based_on_formula or 0) != 1:
+                return False
+            if int(r.depends_on_payment_days or 0) != int(d.get("depends_on_payment_days", 0)):
+                return False
+            if (r.condition or "").strip() != (d.get("condition") or "").strip():
+                return False
+        return True
+
+    return rows_match(ss.earnings, DESIRED_EARNINGS) and rows_match(ss.deductions, DESIRED_DEDUCTIONS)
 
 
 def _struct_row(row: dict) -> dict:
