@@ -1,6 +1,7 @@
-import frappe
 import unittest
 from unittest.mock import patch
+
+import frappe
 
 from ramz_hr.countries import COUNTRY_REGISTRY, get_active_country_module
 

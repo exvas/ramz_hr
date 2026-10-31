@@ -12,7 +12,6 @@ import frappe
 
 from ramz_hr.countries import get_active_country_module
 
-
 DEFAULT_SETTINGS = {
 	"country": "Saudi Arabia",
 	"auto_assign_leave_policy": 1,

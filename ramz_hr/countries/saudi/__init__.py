@@ -15,10 +15,10 @@ def setup() -> None:
 	"""Run all Saudi seeders in dependency order."""
 	from ramz_hr.countries.saudi import (
 		custom_fields,
-		medical_insurance_class,
 		holidays,
-		salary_components,
 		leave_types,
+		medical_insurance_class,
+		salary_components,
 	)
 
 	# Order matters:

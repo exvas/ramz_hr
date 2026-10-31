@@ -1,8 +1,7 @@
 import datetime
-
-import frappe
 import unittest
 
+import frappe
 
 EXPECTED_LEAVE_TYPES = [
 	"Annual Leave",
