@@ -255,13 +255,13 @@ after_install = "ramz_hr.install.after_install"
 after_migrate = "ramz_hr.install.after_migrate"
 
 doc_events = {
-    "Employee": {
-        "validate":     "ramz_hr.countries.saudi.validators.validate_employee",
-        "after_insert": "ramz_hr.countries.saudi.leave_types.auto_assign_leave_policy",
-    },
+	"Employee": {
+		"validate": "ramz_hr.countries.saudi.validators.validate_employee",
+		"after_insert": "ramz_hr.countries.saudi.leave_types.auto_assign_leave_policy",
+	},
 }
 
 fixtures = [
-    {"dt": "Custom Field", "filters": [["module", "=", "Ramz HR"]]},
-    {"dt": "Property Setter", "filters": [["module", "=", "Ramz HR"]]},
+	{"dt": "Custom Field", "filters": [["module", "=", "Ramz HR"]]},
+	{"dt": "Property Setter", "filters": [["module", "=", "Ramz HR"]]},
 ]
