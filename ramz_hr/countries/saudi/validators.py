@@ -6,6 +6,7 @@ failure. validate_employee() is the aggregator wired in hooks.py.
 Nationality fieldname note: this site uses `custom_nationality` (added by
 ksa_compliance or similar app) rather than a stock `nationality` field.
 """
+
 from __future__ import annotations
 
 import datetime
@@ -20,59 +21,59 @@ MAX_PROBATION_DAYS = 180
 
 
 def validate_employee(doc, method=None):
-    """Wire point for doc_events.Employee.validate."""
-    validate_iqama_format(doc)
-    validate_iqama_expiry_presence(doc)
-    validate_iban_format(doc)
-    compute_probation_end_date(doc)
+	"""Wire point for doc_events.Employee.validate."""
+	validate_iqama_format(doc)
+	validate_iqama_expiry_presence(doc)
+	validate_iban_format(doc)
+	compute_probation_end_date(doc)
 
 
 def _get_iqama_number(doc):
-    """Get Iqama number, supporting both custom_ prefixed and standard field names."""
-    return (doc.get("custom_iqama_number") or doc.get("iqama_number") or "").strip()
+	"""Get Iqama number, supporting both custom_ prefixed and standard field names."""
+	return (doc.get("custom_iqama_number") or doc.get("iqama_number") or "").strip()
 
 
 def _get_iqama_expiry(doc):
-    """Get Iqama expiry date, supporting both custom_ prefixed and standard field names."""
-    return doc.get("custom_iqama_expiry") or doc.get("iqama_expiry_date")
+	"""Get Iqama expiry date, supporting both custom_ prefixed and standard field names."""
+	return doc.get("custom_iqama_expiry") or doc.get("iqama_expiry_date")
 
 
 def _get_nationality(doc):
-    """Get nationality, supporting both custom_ prefixed and standard field names."""
-    return (doc.get("custom_nationality") or doc.get("nationality") or "").strip()
+	"""Get nationality, supporting both custom_ prefixed and standard field names."""
+	return (doc.get("custom_nationality") or doc.get("nationality") or "").strip()
 
 
 def validate_iqama_format(doc):
-    iqama = _get_iqama_number(doc)
-    if not iqama:
-        return
-    if not IQAMA_RE.match(iqama):
-        frappe.throw("Iqama / National ID must be exactly 10 digits.")
+	iqama = _get_iqama_number(doc)
+	if not iqama:
+		return
+	if not IQAMA_RE.match(iqama):
+		frappe.throw("Iqama / National ID must be exactly 10 digits.")
 
 
 def validate_iqama_expiry_presence(doc):
-    nationality = _get_nationality(doc)
-    if nationality and nationality != "Saudi Arabia":
-        if not _get_iqama_expiry(doc):
-            frappe.throw("Iqama Expiry is required for non-Saudi employees.")
+	nationality = _get_nationality(doc)
+	if nationality and nationality != "Saudi Arabia":
+		if not _get_iqama_expiry(doc):
+			frappe.throw("Iqama Expiry is required for non-Saudi employees.")
 
 
 def validate_iban_format(doc):
-    iban = (doc.get("custom_iban") or "").strip()
-    if not iban:
-        return
-    if not IBAN_RE.match(iban):
-        frappe.throw("IBAN must match 'SA' followed by exactly 22 digits.")
+	iban = (doc.get("custom_iban") or "").strip()
+	if not iban:
+		return
+	if not IBAN_RE.match(iban):
+		frappe.throw("IBAN must match 'SA' followed by exactly 22 digits.")
 
 
 def compute_probation_end_date(doc):
-    days = doc.get("custom_probation_period_days")
-    doj = doc.get("date_of_joining")
-    if days is None or doj is None:
-        return
-    days = int(days)
-    if not (0 <= days <= MAX_PROBATION_DAYS):
-        frappe.throw(f"Probation Period must be between 0 and {MAX_PROBATION_DAYS} days.")
-    if isinstance(doj, str):
-        doj = datetime.date.fromisoformat(doj)
-    doc.custom_probation_end_date = doj + datetime.timedelta(days=days)
+	days = doc.get("custom_probation_period_days")
+	doj = doc.get("date_of_joining")
+	if days is None or doj is None:
+		return
+	days = int(days)
+	if not (0 <= days <= MAX_PROBATION_DAYS):
+		frappe.throw(f"Probation Period must be between 0 and {MAX_PROBATION_DAYS} days.")
+	if isinstance(doj, str):
+		doj = datetime.date.fromisoformat(doj)
+	doc.custom_probation_end_date = doj + datetime.timedelta(days=days)
